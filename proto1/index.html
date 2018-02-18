@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Perlin noise | Fireball explosion</title>
+        <meta charset="utf-8">
+ 		<style>
+ 			*{box-sizing:border-box; margin:0; padding:0;}
+ 			body{ overflow: hidden; cursor: pointer;}
+
+ 			#messenger {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Exo 2', sans-serif;
+  letter-spacing: 2vw;
+  font-size: 2vw;
+  white-space: nowrap;
+  text-shadow: 0 2px 2px rgba(#000, 0.9);
+  color:white;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+ 		</style>
+
+   </head>
+
+    <body>
+        <div id="container"></div>
+    </body>
+    <link href="https://fonts.googleapis.com/css?family=Exo+2" rel="stylesheet">
+     <script src="../libs/jquery.min.js"></script>
+    <script src="../libs/three.min.js"></script>
+    <!--<script src="../libs/OrbitControls.js"></script>-->
+    <script src="../libs/OBJLoader.js"></script>
+    <script src="../libs/howler.min.js"></script>
+
+
+    <script id="vertexShader2" type="x-shader/x-vertex">
+  uniform float iGlobalTime;
+  uniform vec2 iResolution;
+  uniform vec4 iMouse;
+  uniform float audio1;
+  uniform sampler2D iChannel0;
+  uniform sampler2D iChannel1;
+
+  varying vec2 vUv; 
+  void main() {
+    vUv = uv;
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0 );
+    gl_Position = projectionMatrix * mvPosition;
+  }
+</script>
+
+<script id="fragmentShader2" type="x-shader/x-fragment">
+uniform float iGlobalTime;
+uniform vec2 iResolution;
+uniform vec4 iMouse;
+uniform float audio1;
+uniform float intensity;
+uniform sampler2D iChannel0;
+uniform sampler2D iChannel1;
+varying vec2 vUv; 
+
+#define t iGlobalTime*.5
+mat2 m(float a){float c=cos(a), s=sin(a);return mat2(c,-s,s,-c);}
+float map(vec3 p){
+    p.xz*= m(t*p.z*tan(t));p.xy*= m(t*0.3);
+    vec3 q = p*2.+t;
+    return length(p-vec3(sin(t*0.7)))*log(length(p)+1.) + sin(q.x+sin(q.z+sin(q.y)))*0.5 - 1.;
+}
+
+void main(){  
+  vec2 p = gl_FragCoord.xy/iResolution.y - vec2(1.7,1.0) ;
+  p*=.5 * intensity;
+  //p=vUv*.5;
+    vec3 cl = vec3(0.);
+    float d = 4.5 * intensity;
+    for(int i=0; i<=1; i++) {
+    vec3 p = vec3(0,0,6.) + normalize(vec3(p, -1.))*d;
+        float rz = map(p);
+    float f =  clamp((rz - map(p+.1))*0.5, -.1, 1. );
+        vec3 l = vec3(0.1,0.3,.4) + vec3(3., 2.5, 3.)*f;
+        cl = cl*l + (1.-smoothstep(0., 2.5, rz))*.7*l* sin(intensity);
+    d -= min(rz, 1.);
+  }
+    gl_FragColor = vec4(cl, 1.);
+   // gl_FragColor.r  = tan(intensity)-1.0;
+}
+
+</script>
+
+
+
+    <script type="x-shader/x-vertex" id="vertexShader">
+
+// Include the Ashima code here!
+varying vec2 vUv;
+varying float noise;
+uniform float audio1;
+uniform float time;
+
+
+float noise2( vec2 co ){
+    return fract( sin( dot( co.xy, vec2( 12.9898, 78.233 ) ) ) * 43758.5453 );
+}
+
+void main() {
+  vUv = uv;
+  //noise = 10.0 *  -.10 * turbulence( .5 * normal + (time) );
+  noise =noise2(vUv)+(audio1-1.0) *.2 * tan(time);
+
+  vec3 newPosition = position + normal  * ((noise2(vUv)*(audio1-1.0)) *5.0);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );
+}
+    </script>
+
+    <script type="x-shader/x-vertex" id="fragmentShader">
+
+
+
+
+
+uniform float time;
+uniform vec2 iResolution;
+uniform vec4 iMouse;
+uniform float audio1;
+
+varying vec2 vUv;
+varying float noise;
+uniform sampler2D tExplosion;
+
+#define t time*.5
+
+mat2 m(float a){float c=cos(a), s=sin(a);return mat2(c,-s,s,c);}
+float map(vec3 p){
+    p.xz*= m(t*p.z*cos(t));p.xy*= m(t*0.3);
+    vec3 q = p*-2.+t;
+    return length(p-vec3(tan(t*0.8)))*log(length(p)+1.) + sin(q.x+sin(q.z+sin(q.y)))*0.5 - 1.;
+}
+
+
+float random( vec3 scale, float seed ){
+  return fract( sin( dot( gl_FragCoord.xyz + seed, scale ) ) * 43758.5453 + seed ) ;
+}
+
+float noise2( vec2 co ){
+    return fract( sin( dot( co.xy, vec2( 12.9898, 78.233 ) ) ) * 43758.5453 );
+}
+
+
+void main() {
+
+	vec2 p = gl_FragCoord.xy/iResolution.y;
+	p=vUv*.3;
+    vec3 cl = vec3(0.);
+    float d = 6.5;
+    for(int i=0; i<=2; i++) {
+    vec3 p = vec3(0.,0,6.) + normalize(vec3(p, -1.))*d;
+        float rz = map(p);
+	    float f =  clamp((rz - map(p+.1))*0.5, -.1, 1. );
+	        vec3 l = vec3(0.1,0.3,.4) + vec3(2., 2.5, 3.)*f;
+	        cl = cl*l + (1.-smoothstep(0., 2.5, rz))*1.7*l;
+	    d -= min(rz, 1.);
+	  }
+    gl_FragColor = vec4(cl, 1.);
+
+
+
+  float r = .1 * random( vec3( 12.9898, 78.233, 151.7182 ), 0.0 );
+
+  vec2 tPos = vec2( 0, 1.3 * noise + r );
+  vec4 color = texture2D( tExplosion, tPos );
+
+  gl_FragColor *= vec4( color.rgb*1.0, 1.0 ) * audio1;
+  //gl_FragColor = vec4( color.rgb*.1, 1.0 )/audio1;
+
+}
+    </script>
+
+    <script type="text/javascript" id="mainCode">
+ var
+    container,
+    renderer,
+    scene,
+    camera,
+    mesh,mesh2,
+    tower,
+    controls,
+    start = Date.now(),
+    fov = 30;
+	var pointLight, pointLight2;
+    var mouseX = 0;
+	var mouseY = 0;
+	var targetX = 0;
+	var targetY = 0;
+	var windowHalfX = window.innerWidth / 2;
+	var windowHalfY = window.innerHeight / 2;
+	var uniforms2;
+	 var turnOn = false;
+
+window.addEventListener( 'load', function() {
+    container = document.getElementById( "container" );
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(
+        fov,
+        window.innerWidth / window.innerHeight,
+        1,
+        10000 );
+    camera.position.z = 100;
+    //camera.position.y = 100;
+    tower = new THREE.Object3D();
+    scene.add(tower);
+   material = new THREE.ShaderMaterial( {
+  uniforms: {
+    tExplosion: {
+      type: "t",
+      value: THREE.ImageUtils.loadTexture( '../assets/images/explosion.png' )
+    },
+    time: {
+      type: "f",
+      value: 0.0
+    },
+    
+    audio1: { type: "f", value: 1.0 },
+    iResolution: { type: "v2", value: new THREE.Vector2() }
+     
+  },
+  vertexShader: document.getElementById( 'vertexShader' ).textContent,
+  fragmentShader: document.getElementById( 'fragmentShader' ).textContent
+} );
+
+
+
+
+   uniforms2 = {
+      iGlobalTime: { type: "f", value: 10000.0 },
+      audio1: { type: "f", value: 0.0 },
+      intensity: { type: "f", value: 1.0 },
+      iResolution: { type: "v2", value: new THREE.Vector2() }
+    };
+    //uniforms.iChannel0.value.wrapS = uniforms.iChannel0.value.wrapT = THREE.RepeatWrapping;
+
+    material2 = new THREE.ShaderMaterial( {
+      uniforms: uniforms2,
+      vertexShader: document.getElementById( 'vertexShader2' ).textContent,
+      fragmentShader: document.getElementById( 'fragmentShader2' ).textContent,
+     
+    });
+    material2.side=THREE.BackSide;
+
+    var geometry = new THREE.PlaneGeometry( 1, 1 );
+    mesh2 = new THREE.Mesh( geometry, material2 );
+    mesh2.scale.x = window.innerWidth;
+    mesh2.scale.y = window.innerHeight;
+    mesh2.position.z=100;
+    //mesh2.rotation.y = Math.PI/180 * 180;
+    tower.add(mesh2);
+
+
+
+
+
+
+var onProgress = function ( xhr ) {
+					if ( xhr.lengthComputable ) {
+						var percentComplete = xhr.loaded / xhr.total * 100;
+						console.log( Math.round(percentComplete, 2) + '% downloaded' );
+
+						$(".loader").css("width", (Math.round(percentComplete, 2) + 20) + "%" );
+					}
+				};
+
+				var onError = function ( xhr ) {
+				};
+
+var managerModels = new THREE.LoadingManager();
+				managerModels.onProgress = function ( item, loaded, total ) {
+
+					console.log( item, loaded, total );
+
+
+				};
+
+				var loader = new THREE.OBJLoader( managerModels );
+
+	loader.load( '../assets/models/DDD_Monolith.obj', function ( object ) {
+		//object.position.set(-5,-50,5);
+		object.scale.set(1,1,1);
+		//object.rotation.set(0,Math.PI/180*-90,0);
+		//object.position.y=-30;
+		object.traverse( function ( child ) {
+			child.material = material;
+				
+			} );
+		mesh = object;
+		mesh.position.y=-30;
+		tower.add( mesh );
+
+	}, onProgress, onError );
+
+
+
+    //mesh = new THREE.Mesh(
+    //    new THREE.IcosahedronGeometry( 20, 4 ),
+     //   material
+    //);
+   // scene.add( mesh );
+
+
+   	material.uniforms.iResolution.value.x =  window.innerWidth;
+    material.uniforms.iResolution.value.y = window.innerHeight;
+    uniforms2.iResolution.value.x =  window.innerWidth;
+    uniforms2.iResolution.value.y = window.innerHeight;
+
+    renderer = new THREE.WebGLRenderer();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    renderer.setPixelRatio( window.devicePixelRatio );
+    renderer.shadowMap.enabled = true;
+	renderer.shadowMap.type = THREE.BasicShadowMap;
+    container.appendChild( renderer.domElement );
+    //controls = new THREE.OrbitControls( camera, renderer.domElement );
+    //controls.target = tower.position;
+
+
+    onWindowResize();
+    window.addEventListener( 'resize', onWindowResize );
+    render();
+
+
+
+
+
+   
+
+    // text ideas
+
+
+    var Messenger = function(el){
+  'use strict';
+  var m = this;
+  
+  m.init = function(){
+    m.codeletters = "10";
+    m.message = 0;
+    m.current_length = 0;
+    m.fadeBuffer = false;
+    m.messages = [
+      "There are things known",
+    "and there are things unknown",
+    "and in between",
+    "are the doors of perception" ,
+    "",
+    "",
+    "DDD 18",
+    "",
+    "",
+    "doors of perception",
+    "",
+    "open the doors",
+    "of your mind",
+    "",
+    "",
+
+    ];
+    
+    setTimeout(m.animateIn, 1000);
+  };
+  
+  m.generateRandomString = function(length){
+    var random_text = '';
+    while(random_text.length < length){
+      random_text += m.codeletters.charAt(Math.floor(Math.random()*m.codeletters.length));
+    } 
+    
+    return random_text;
+  };
+  
+  m.animateIn = function(){
+    if(m.current_length < m.messages[m.message].length){
+      m.current_length = m.current_length + 2;
+      if(m.current_length > m.messages[m.message].length) {
+        m.current_length = m.messages[m.message].length;
+      }
+      
+      var message = m.generateRandomString(m.current_length);
+      $(el).html(message);
+      
+      setTimeout(m.animateIn, 20);
+    } else { 
+      setTimeout(m.animateFadeBuffer, 50);
+    }
+  };
+  
+  m.animateFadeBuffer = function(){
+    if(m.fadeBuffer === false){
+      m.fadeBuffer = [];
+      for(var i = 0; i < m.messages[m.message].length; i++){
+        m.fadeBuffer.push({c: (Math.floor(Math.random()*12))+1, l: m.messages[m.message].charAt(i)});
+      }
+    }
+    
+    var do_cycles = false;
+    var message = ''; 
+    
+    for(var i = 0; i < m.fadeBuffer.length; i++){
+      var fader = m.fadeBuffer[i];
+      if(fader.c > 0){
+        do_cycles = true;
+        fader.c--;
+        message += m.codeletters.charAt(Math.floor(Math.random()*m.codeletters.length));
+      } else {
+        message += fader.l;
+      }
+    }
+    
+    $(el).html(message);
+    
+    if(do_cycles === true){
+      setTimeout(m.animateFadeBuffer, 50);
+    } else {
+      setTimeout(m.cycleText, 5000);
+    }
+  };
+  
+  m.cycleText = function(){
+    m.message = m.message + 1;
+    if(m.message >= m.messages.length){
+      m.message = 0;
+    }
+    
+    m.current_length = 0;
+    m.fadeBuffer = false;
+    $(el).html('');
+    
+    setTimeout(m.animateIn, 200);
+  };
+  
+  m.init();
+}
+
+console.clear();
+var messenger = new Messenger($('#messenger'));
+
+    /*
+
+    "There are things known"
+    "and there are things unknown"
+    "and in between"
+    "are the doors of perception" 
+    "-Aldous Huxley"
+*/
+
+} );
+
+
+document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+function onDocumentMouseMove( event ) {
+	mouseX = ( event.clientX - windowHalfX );
+	mouseY = ( event.clientY - windowHalfY );
+}
+
+function onWindowResize () {
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+}
+function render() {
+	
+	//time = ( Date.now() - start );
+    material.uniforms[ 'time' ].value = .00025 * (Date.now() - start);
+
+    //console.log( material.uniforms[ 'time' ].value);
+
+    uniforms2.iGlobalTime.value =material.uniforms[ 'time' ].value ;
+
+    if(turnOn) {  
+		console.log("on");
+		uniforms2.intensity.value +=.001 ;
+		camera.rotation.z+=1;
+	 }  else {
+	 	uniforms2.intensity.value =1.0;
+	 	camera.rotation.z+=1;
+	 }
+
+    targetX = mouseX * .005;
+	targetY = mouseY * .001;
+				
+
+    if(mesh) {
+    	//console.log(mesh.rotation.y);
+    	mesh.rotation.y+=.002;
+    	//mesh.rotation.x-=.001;
+
+    	//mesh.position.x-=Math.sin( material.uniforms[ 'time' ].value )*.02;
+    	if(material.uniforms[ 'time' ].value <= 6.5) {
+    		tower.position.z+=Math.sin( material.uniforms[ 'time' ].value *.1 )*.5;
+    		mesh.position.y+=Math.sin( material.uniforms[ 'time' ].value )*.02;
+    	}
+
+    	if( material.uniforms[ 'time' ].value >= 6.5){
+    		
+    		tower.position.z-=Math.sin( material.uniforms[ 'time' ].value *.01 )*.5;
+    		mesh.position.y+=Math.sin( material.uniforms[ 'time' ].value )*.02;
+
+    		mesh.rotation.y+=.02;
+    		mesh.rotation.x-=.001;
+    	}
+
+    	if( material.uniforms[ 'time' ].value >= 13.0){
+    		
+    		tower.position.z+=Math.sin( material.uniforms[ 'time' ].value *.01 )*.5;
+    		mesh.position.y-=Math.sin( material.uniforms[ 'time' ].value )*.02;
+
+    		mesh.rotation.y+=.002;
+    		mesh.rotation.x-=.001;
+    	}
+
+    	//camera.position.x+=Math.sin( material.uniforms[ 'time' ].value )*.01;
+		//controls.object.position = camera.position;
+    	//controls.target = THREE.Vector3(mesh.position.x, mesh.position.y-1000, mesh.position.z);
+    	
+    	//controls.target = tower.position;
+    	mesh.rotation.y += 0.05 * ( targetX - mesh.rotation.y );
+		mesh.rotation.x += 0.05 * ( targetY - mesh.rotation.x );
+
+		camera.lookAt( tower.position );
+
+		//mesh2.rotation.y+=.1;
+    }
+
+    if(dataArray){
+      analyser.getByteTimeDomainData(dataArray);
+      var v = dataArray[0] / 128.0;
+      //console.log(v);
+      material.uniforms.audio1.value = v ;
+    } else {
+      material.uniforms.audio1.value = 1.0 ;
+    }
+
+    
+
+    
+    
+    renderer.render( scene, camera );
+    requestAnimationFrame( render );
+}
+
+
+
+
+
+ // AUDIO ////
+
+  // create am audio context, move this seperate file later
+
+  var audioCtx, analyser, bufferLength, dataArray;
+
+  window.addEventListener('load', initAudio, false);
+  function initAudio() {
+    try {
+      // Fix up for prefixing
+      window.audioCtx = window.AudioContext||window.webkitAudioContext;
+      audioCtx = new AudioContext();
+      analyser = audioCtx.createAnalyser();
+    }
+    catch(e) {
+      alert('Web Audio API is not supported in this browser');
+    }
+
+
+    // load the audio file
+
+    source = audioCtx.createBufferSource();
+    var request = new XMLHttpRequest();
+
+    request.open('GET', '../assets/beat3.mp3', true);
+
+    request.responseType = 'arraybuffer';
+
+
+    request.onload = function() {
+      var audioData = request.response;
+
+      audioCtx.decodeAudioData(audioData, function(buffer) {
+          source.buffer = buffer;
+          source.connect(analyser);
+          analyser.connect(audioCtx.destination);
+          source.loop = true;
+
+          // set up waveform 
+
+          analyser.fftSize = 128;
+          bufferLength = analyser.frequencyBinCount;
+          dataArray = new Uint8Array(bufferLength);
+          analyser.getByteTimeDomainData(dataArray);
+
+          //console.log(dataArray);
+
+        },
+
+        function(e){"Error with decoding audio data" + e.err});
+
+    }
+
+    request.send();
+
+    setTimeout(function(){ source.start(0); } , 500);
+
+    
+    var sounds=[];
+    // set up dsounds
+    var sound = new Howl({ src: "../assets/Risers_Pulse_02.mp3"});
+	sounds["click1"] = sound;
+
+	var sound = new Howl({ src: "../assets/Risers_Pulse_03.mp3"});
+	sounds["click2"] = sound;
+
+	var sound = new Howl({ src: "../assets/Trailer_Hits_Impact_01.mp3"});
+	sounds["click3"] = sound;
+
+	var sound = new Howl({ src: "../assets/Risers_Tech_04.mp3"});
+	sounds["click4"] = sound;
+
+	var sound = new Howl({ src: "../assets/Robotic_19.mp3"});
+	sounds["click5"] = sound;
+
+
+    // handle clicks
+    var clickCount = 0;
+
+    $(document).mousedown(function(){
+    	clickCount++;
+		console.log(clickCount);
+		var n = Math.ceil(Math.random()*5);
+		sounds["click"+n].play();
+		
+		mouseY+=clickCount*50.0;
+		mouseX+=clickCount*100.0;
+
+
+		turnOn = true;
+    });
+
+    $(document).mouseup(function(){
+		turnOn = false;
+		console.log("up");
+    });
+
+  }
+
+    </script>
+<div id="messenger"></div>
+</html>

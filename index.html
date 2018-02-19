@@ -33,6 +33,30 @@
           <script src="libs/three.min.js"></script>
           <script src="libs/OBJLoader.js"></script>
           <script src="libs/howler.min.js"></script>
+          <script>
+            // COPY FOR PRESENTAION, SWAP FOR PREFERED LANGUAGE // 
+              copy = [
+              "There are things known",
+              "there are things unknown",
+              "and in between",
+              "are the doors of perception" ,
+              "",
+              "MONOGRID",
+              "DEVX 2018",
+              "",
+              "Digitial Design Days",
+              "",
+              "",
+              "click to interact",
+              "open the doors",
+              "of your mind",
+              "",
+              "click to interact",
+              "",
+              ""          
+            ]
+            //END COPY //
+        </script>
    </head>
 
     <body>
@@ -442,26 +466,7 @@ function render() {
         t.message = 0;
         t.current_length = 0;
         t.fadeBuffer = false;
-        t.lines = [
-          "There are things known",
-          "there are things unknown",
-          "and in between",
-          "are the doors of perception" ,
-          "",
-          "MONOGRID",
-          "DEVX 2018",
-          "",
-          "Digitial Design Days",
-          "",
-          "",
-          "click to interact",
-          "open the doors",
-          "of your mind",
-          "",
-          "click to interact",
-          "",
-          ""          
-        ];
+        t.lines = copy;
     
         setTimeout(t.animateIn, 1500);
   };

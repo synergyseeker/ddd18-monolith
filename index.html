@@ -252,14 +252,6 @@
           window.addEventListener( 'resize', onWindowResize );
           render();
 
-
-
-
-
-   
-
-   
-
 } );
 
 
@@ -271,43 +263,33 @@ function onDocumentMouseMove( event ) {
 
 function onWindowResize () {
   material.uniforms.iResolution.value.x =  window.innerWidth;
-          material.uniforms.iResolution.value.y = window.innerHeight;
-          uniforms2.iResolution.value.x =  window.innerWidth;
-          uniforms2.iResolution.value.y = window.innerHeight;
+  material.uniforms.iResolution.value.y = window.innerHeight;
+  uniforms2.iResolution.value.x =  window.innerWidth;
+  uniforms2.iResolution.value.y = window.innerHeight;
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
 
-
 }
+
+
 function render() {
-	
-	//time = ( Date.now() - start );
     material.uniforms[ 'time' ].value = .00025 * (Date.now() - start);
-
-    //console.log( material.uniforms[ 'time' ].value);
-
     uniforms2.iGlobalTime.value =material.uniforms[ 'time' ].value ;
 
     if(turnOn) {  
-		console.log("on");
-		uniforms2.intensity.value +=.001 ;
-		//camera.rotation.z+=1;
-	 }  else {
-	 	uniforms2.intensity.value =1.0;
-	 	//camera.rotation.z+=1;
-	 }
+        console.log("on");
+        uniforms2.intensity.value +=.001 ;
+     }  else {
+    	   uniforms2.intensity.value =1.0;
+     }
 
     targetX = mouseX * .005;
-	targetY = mouseY * .001;
+    targetY = mouseY * .001;
 				
 
     if(mesh) {
-    	//console.log(mesh.rotation.y);
     	mesh.rotation.y+=.002;
-    	//mesh.rotation.x-=.001;
-
-    	//mesh.position.x-=Math.sin( material.uniforms[ 'time' ].value )*.02;
     	if(material.uniforms[ 'time' ].value <= 6.5) {
     		tower.position.z+=Math.sin( material.uniforms[ 'time' ].value *.1 )*.5;
     		mesh.position.y+=Math.sin( material.uniforms[ 'time' ].value )*.02;
@@ -316,109 +298,15 @@ function render() {
     	if( material.uniforms[ 'time' ].value >= 6.5){
     		
     		tower.position.z=Math.sin( material.uniforms[ 'time' ].value *.3 )*50.0 + 250.0;
-    		//mesh.position.y+=Math.sin( material.uniforms[ 'time' ].value )*.02;
-
     		mesh.rotation.y+=.02;
     		mesh.rotation.x-=.001;
     	} 
 
-      /*
-
-     // console.log("z",tower.position.z);
-
-    	if( material.uniforms[ 'time' ].value >= 8.0){
-    		
-    		tower.position.z=Math.sin( material.uniforms[ 'time' ].value *.1 )*100.0 + 210.0;
-    		mesh.position.y-=Math.sin( material.uniforms[ 'time' ].value *5.0 )*.08;
-
-    		mesh.rotation.y+=.02;
-    		mesh.rotation.x-=.001;
-    	} else 
-
-
-      if( material.uniforms[ 'time' ].value >= 10.0){
-        
-        tower.position.z=Math.sin( material.uniforms[ 'time' ].value *.1 )*100.0 + 260.0;
-        mesh.position.y-=Math.sin( material.uniforms[ 'time' ].value *5.0 )*.08;
-
-        mesh.rotation.y+=.02;
-        mesh.rotation.x-=.001;
-      } else 
-
-
-      if( material.uniforms[ 'time' ].value >= 10.4){
-        
-        tower.position.z=Math.sin( material.uniforms[ 'time' ].value *.1 )*100.0 + 110.0;
-        mesh.position.y-=Math.sin( material.uniforms[ 'time' ].value *5.0 )*.08;
-
-        mesh.rotation.y+=.02;
-        mesh.rotation.x-=.001;
-      } 
-
-
-
-      if( material.uniforms[ 'time' ].value >= 10.6){
-        
-        tower.position.z=Math.sin( material.uniforms[ 'time' ].value *6.1 )*100.0 + 10.0;
-        mesh.position.y-=Math.sin( material.uniforms[ 'time' ].value *5.0 )*.08;
-
-        mesh.rotation.y+=.02;
-        mesh.rotation.x-=.001;
-      } 
-
-
-
-      if( material.uniforms[ 'time' ].value >= 10.8){
-        
-        tower.position.z=Math.sin( material.uniforms[ 'time' ].value *1.1 )*100.0 + 180.0;
-        mesh.position.y-=Math.sin( material.uniforms[ 'time' ].value *5.0 )*.08;
-
-        mesh.rotation.y+=.02;
-        mesh.rotation.x-=.001;
-      } 
-
-
-      if( material.uniforms[ 'time' ].value >= 11.0){
-        
-        tower.position.z=Math.sin( material.uniforms[ 'time' ].value *.1 )*100.0 + 480.0;
-        mesh.position.y-=Math.sin( material.uniforms[ 'time' ].value *5.0 )*.08;
-
-        mesh.rotation.y+=.02;
-        mesh.rotation.x-=.001;
-      }  
-
-
-      if( material.uniforms[ 'time' ].value >= 12.0){
-        
-        tower.position.z=Math.sin( material.uniforms[ 'time' ].value *2.5 )*50.0 + 250.0;
-        mesh.position.y-=Math.sin( material.uniforms[ 'time' ].value *.2 )*.005;
-
-        mesh.rotation.y+=.02;
-        mesh.rotation.x-=.001;
-      } 
-*/
-
-
-/*
-      if( material.uniforms[ 'time' ].value >= 16.0){
-          start=0;
-          material.uniforms[ 'time' ].value = 0;
-          uniforms2.iGlobalTime = 10000.0;
-          //tower.position.z=200;
-          //mesh.position.y=30
-      }
-*/
-    	//camera.position.x+=Math.sin( material.uniforms[ 'time' ].value )*.01;
-		//controls.object.position = camera.position;
-    	//controls.target = THREE.Vector3(mesh.position.x, mesh.position.y-1000, mesh.position.z);
-    	
-    	//controls.target = tower.position;
     	mesh.rotation.y += 0.05 * ( targetX - mesh.rotation.y );
-		mesh.rotation.x += 0.05 * ( targetY - mesh.rotation.x );
+		  mesh.rotation.x += 0.05 * ( targetY - mesh.rotation.x );
 
-		camera.lookAt( tower.position );
+		  camera.lookAt( tower.position );
 
-		//mesh2.rotation.y+=.1;
     }
 
     if(dataArray){
